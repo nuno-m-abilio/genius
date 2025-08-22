@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genius</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @font-face {
+            font-family: 'alien';
+            src: url('alien.ttf') format('truetype');
+        }
+
+        body {
+            background: linear-gradient(135deg, #191919, #2a2a2a);
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #FFFDF4;
+            overflow: hidden;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .title {
+            display: none;
+        }
+
+        .game-symbol {
+            position: relative;
+            width: 500px;
+            height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .center-shape {
+        position: absolute;
+        width: 120px;
+        height: 100px;
+        background: linear-gradient(45deg, #FFFDF4, #FFFDF4);
+        clip-path: polygon(50% 85%, 15% 15%, 85% 15%);
+        border-radius: 0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 0 30px rgba(192, 110, 235, 0.3);
+        z-index: 1;
+        }
+
+        .center-shape:hover {
+        transform: scale(1.1);
+        box-shadow: 0 0 30px rgba(255, 253, 244, 0.4);
+        }
+
+        .center-shape.active {
+        transform: scale(1.2);
+        box-shadow: 0 0 40px rgba(98, 195, 236, 0.8);
+        }
+
+        .special-symbol {
+            font-family: 'alien', monospace;
+            position: absolute;
+            font-size: 40px;
+            color: #FFFDF4;
+            transform: rotate(-45deg);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            text-shadow: 0 0 10px rgba(255, 253, 244, 0.8);
+        }
+
+        .circle {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+            border: 3px solid #FFFDF4;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(255, 253, 244, 0.2);
+        }
+
+        .circle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(255, 253, 244, 0.4);
+        }
+
+        .circle.active {
+            transform: scale(1.2);
+            box-shadow: 0 0 40px rgba(98, 195, 236, 0.8);
+        }
+
+        .circle.reveal-mode {
+            background: linear-gradient(135deg, #C06EEB, #62C3EC);
+            border-color: #FFFDF4;
+        }
+
+        .ancient-char {
+            font-family: 'alien', monospace;
+            font-size: 30px;
+            color: #FFFDF4;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            text-shadow: 0 0 10px rgba(255, 253, 244, 0.8);
+        }
+
+        .pos-1 { top: 20px; left: 210px; background: linear-gradient(135deg, #C06EEB, #9A4BC7); } /* Topo */
+        .pos-2 { top: 20px; left: 80px; background: linear-gradient(135deg, #62C3EC, #4A9BC7); } /* Esquerda superior */
+        .pos-3 { top: 20px; right: 80px; background: linear-gradient(135deg, #B5EB73, #9BC759); } /* Direita superior */
+        .pos-4 { bottom: 190px; left: 0px; background: linear-gradient(135deg, #DD7D56, #C7653A); } /* Esquerda inferior */
+        .pos-5 { bottom: 190px; right: 0px; background: linear-gradient(135deg, #C06EEB, #DD7D56); } /* Direita inferior */
+        .pos-6 { bottom: 20px; left: 210px; background: linear-gradient(135deg, #B5EB73, #62C3EC); } /* Base */
+
+        .pos-1.active { background: linear-gradient(135deg, #E68AFF, #C06EEB); }
+        .pos-2.active { background: linear-gradient(135deg, #8EDDFF, #62C3EC); }
+        .pos-3.active { background: linear-gradient(135deg, #D4FF99, #B5EB73); }
+        .pos-4.active { background: linear-gradient(135deg, #FF9D7C, #DD7D56); }
+        .pos-5.active { background: linear-gradient(135deg, #E68AFF, #8EDDFF); }
+        .pos-6.active { background: linear-gradient(135deg, #D4FF99, #FF9D7C); }
+
+        .info-panel {
+            text-align: center;
+            max-width: 600px;
+        }
+
+        .start-btn {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            background: linear-gradient(135deg, #C06EEB, #62C3EC);
+            border: none;
+            border-radius: 25px;
+            color: #FFFDF4;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(192, 110, 235, 0.3);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(192, 110, 235, 0.5);
+        }
+
+        .start-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            font-size: 1.3em;
+            color: #DD7D56;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+            min-height: 30px;
+            text-shadow: 0 0 10px rgba(221, 125, 86, 0.5);
+        }
+
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .pulsing {
+            animation: pulse 1s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="title">GENIUS</h1>
+        
+        <div class="game-symbol">
+            <div class="circle pos-1" data-value="1">
+                <span class="ancient-char">W</span>
+            </div>
+            <div class="circle pos-2" data-value="2">
+                <span class="ancient-char">◊</span>
+            </div>
+            <div class="circle pos-3" data-value="3">
+                <span class="ancient-char">C</span>
+            </div>
+            <div class="circle pos-4" data-value="4">
+                <span class="ancient-char">U</span>
+            </div>
+            <div class="circle pos-5" data-value="5">
+                <span class="ancient-char">K</span>
+            </div>
+            <div class="circle pos-6" data-value="6">
+                <span class="ancient-char">T</span>
+            </div>
+            
+            <div class="center-shape" data-value="7">
+                <span class="special-symbol">A</span>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <button class="start-btn" id="startBtn">INICIAR</button>
+            <div class="message" id="message"></div>
+        </div>
+    </div>
+
+    <script>
+        class MysteryGame {
+            constructor() {
+                this.targetSequence = ['1', '2', '3', '1', '2', '1', '5', '4', '5', '6', '7'];
+                this.userInput = [];
+                this.currentLevel = 0;
+                this.isActive = false;
+                this.isDisplaying = false;
+                this.hasStarted = false;
+                
+                this.tones = {
+                    1: this.createTone(400),
+                    2: this.createTone(500),
+                    3: this.createTone(600),
+                    4: this.createTone(700),
+                    5: this.createTone(800),
+                    6: this.createTone(900),
+                    7: this.createTone(1000)
+                };
+                
+                this.initializeGame();
+            }
+            
+            createTone(frequency) {
+                return () => {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                };
+            }
+            
+            initializeGame() {
+                document.getElementById('startBtn').addEventListener('click', () => this.beginGame());
+                
+                // Adicionar listeners para todos os elementos clicáveis
+                document.querySelectorAll('.circle, .center-shape').forEach(element => {
+                    element.addEventListener('click', (e) => this.processClick(e));
+                });
+            }
+            
+            beginGame() {
+                this.currentLevel = 0;
+                this.userInput = [];
+                this.isActive = true;
+                this.hasStarted = true;
+                
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('message').textContent = '';
+                
+                this.displaySequence();
+            }
+            
+            async displaySequence() {
+                this.isDisplaying = true;
+                
+                await this.delay(1000);
+                
+                // Mostrar sequência até o nível atual
+                for (let i = 0; i <= this.currentLevel; i++) {
+                    await this.activateElement(this.targetSequence[i]);
+                    await this.delay(200);
+                }
+                
+                this.isDisplaying = false;
+                this.userInput = [];
+            }
+            
+            async activateElement(value) {
+                let element;
+                if (value === 'S') {
+                    element = document.querySelector('.center-shape');
+                } else {
+                    element = document.querySelector(`[data-value="${value}"]`);
+                }
+                
+                if (element) {
+                    element.classList.add('active');
+                    this.tones[value]();
+                    await this.delay(600);
+                    element.classList.remove('active');
+                }
+            }
+            
+            processClick(e) {
+                if (!this.isActive || this.isDisplaying) return;
+                
+                const clickedValue = e.target.closest('[data-value]').dataset.value;
+                const expectedValue = this.targetSequence[this.userInput.length];
+                
+                // Feedback visual do clique
+                e.target.closest('[data-value]').classList.add('active');
+                this.tones[clickedValue]();
+                
+                setTimeout(() => {
+                    e.target.closest('[data-value]').classList.remove('active');
+                }, 300);
+                
+                if (clickedValue === expectedValue) {
+                    this.userInput.push(clickedValue);
+                    
+                    // Verificar se completou o nível atual
+                    if (this.userInput.length === this.currentLevel + 1) {
+                        if (this.currentLevel === this.targetSequence.length - 1) {
+                            // Completou todo o desafio!
+                            this.revealSecretSymbols();
+                        } else {
+                            // Avançar para próximo nível
+                            this.currentLevel++;
+                            setTimeout(() => this.displaySequence(), 1000);
+                        }
+                    }
+                } else {
+                    // Erro - reiniciar
+                    this.endGame();
+                }
+            }
+            
+            async revealSecretSymbols() {
+                // Mostrar símbolos nos círculos
+                document.querySelectorAll('.circle').forEach(circle => {
+                    circle.classList.add('reveal-mode');
+                    const symbol = circle.querySelector('.ancient-char');
+                    if (symbol) {
+                        symbol.style.opacity = '1';
+                    }
+                });
+                
+                // Destacar o centro
+                const center = document.querySelector('.center-shape');
+                center.classList.add('pulsing');
+                
+                await this.delay(3000);
+                
+                // Reset após 3 segundos
+                this.hideSymbols();
+                this.resetGame();
+            }
+            
+            hideSymbols() {
+                document.querySelectorAll('.circle').forEach(circle => {
+                    circle.classList.remove('reveal-mode');
+                    const symbol = circle.querySelector('.ancient-char');
+                    if (symbol) {
+                        symbol.style.opacity = '0';
+                    }
+                });
+                
+                document.querySelector('.center-shape').classList.remove('pulsing');
+            }
+            
+            endGame() {
+                this.isActive = false;
+                
+                setTimeout(() => this.resetGame(), 2000);
+            }
+            
+            resetGame() {
+                this.currentLevel = 0;
+                this.userInput = [];
+                this.isActive = false;
+                this.isDisplaying = false;
+                this.hasStarted = false;
+                
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('message').textContent = '';
+                
+                this.hideSymbols();
+            }
+            
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+        
+        // Inicializar o jogo quando a página carregar
+        window.addEventListener('load', () => {
+            new MysteryGame();
+        });
+    </script>
+</body>
+</html>
